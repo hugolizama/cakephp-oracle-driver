@@ -23,7 +23,7 @@ In bootstrap.php load plugin with bootstrap.
 
 ## Requirements
 
-- CakePHP 3.2+
+- CakePHP 3.4+
 - an Oracle PHP extension
   - OCI8 (PHP extension built with PHP)
   - PDO_OCI (PHP extension built with PHP)
@@ -48,14 +48,21 @@ return [
             'className' => 'CakeDC\OracleDriver\Database\OracleConnection',
             'driver' => 'CakeDC\OracleDriver\Database\Driver\OracleOCI', # For OCI8
             #'driver' => 'CakeDC\\OracleDriver\\Database\\Driver\\OraclePDO', # For PDO_OCI
-            'host' => 'oracle11g',          # Database host name or IP address
-            //'port' => 'nonstandard_port', # Database port number (default: 1521)
-            'username' => 'blogs',          # Database username
-            'password' => 'password',       # Database password
-            'database' => 'XE',             # Database name (maps to Oracle's `SERVICE_NAME`)
-            'sid' => '',                    # Database System ID (maps to Oracle's `SID`)
-            'instance' => '',               # Database instance name (maps to Oracle's `INSTANCE_NAME`)
-            'pooled' => '',                 # Database pooling (maps to Oracle's `SERVER=POOLED`)
+            'persistent' => false,
+            'host' => 'oracle11g',                  # Database host name or IP address
+            //'port' => 'nonstandard_port',         # Database port number (default: 1521)
+            'username' => 'blogs',                  # Database username
+            'password' => 'password',               # Database password
+            'database' => 'XE',                     # Database name (maps to Oracle's `SERVICE_NAME`)
+            'sid' => '',                            # Database System ID (maps to Oracle's `SID`)
+            'instance' => '',                       # Database instance name (maps to Oracle's `INSTANCE_NAME`)
+            'pooled' => '',                         # Database pooling (maps to Oracle's `SERVER=POOLED`)
+            'encoding' => 'UTF8',                   # Encoding
+            'timezone' => 'UTC',                    # Timezone
+            'flags' => ['charset' => 'AL32UTF8'],   # Charset
+            'cacheMetadata' => true,                # Default value
+            'log' => false,                         # Default value
+            'quoteIdentifiers' => false,            # identifier quoting to true if you are using reserved words
         ]
     ]
 ];
