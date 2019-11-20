@@ -607,6 +607,8 @@ WHERE 1=1 " . ($useOwner ? $ownerCondition : '') . $objectCondition . " ORDER BY
     /**
      * {@inheritDoc}
      */
+    /*Modif Hugo Lizama*/
+    /*strtolower --> strtoupper to convert all column names to uppercase*/
     public function convertForeignKeyDescription(TableSchema $table, $row)
     {
         $row = array_change_key_case($row);
@@ -717,7 +719,7 @@ WHERE 1=1 " . ($useOwner ? $ownerCondition : '') . $objectCondition . " ORDER BY
         $sql = [];
 
         foreach ($table->constraints() as $name) {
-            $constraint = $table->constraint($name);
+            $constraint = $table->getConstraint($name);
             if ($constraint['type'] === TableSchema::CONSTRAINT_FOREIGN) {
                 $tableName = $this->_driver->quoteIfAutoQuote($table->name());
                 $sql[] = sprintf($sqlPattern, $tableName, $this->constraintSql($table, $name));
@@ -736,7 +738,7 @@ WHERE 1=1 " . ($useOwner ? $ownerCondition : '') . $objectCondition . " ORDER BY
         $sql = [];
 
         foreach ($table->constraints() as $name) {
-            $constraint = $table->constraint($name);
+            $constraint = $table->getConstraint($name);
             if ($constraint['type'] === TableSchema::CONSTRAINT_FOREIGN) {
                 $tableName = $this->_driver->quoteIfAutoQuote($table->name());
                 $constraintName = $this->_driver->quoteIfAutoQuote($name);
@@ -752,7 +754,7 @@ WHERE 1=1 " . ($useOwner ? $ownerCondition : '') . $objectCondition . " ORDER BY
      */
     public function indexSql(TableSchema $table, $name)
     {
-        $data = $table->index($name);
+        $data = $table->getIndex($name);
         $columns = array_map([
             $this->_driver,
             'quoteIfAutoQuote'
@@ -766,7 +768,7 @@ WHERE 1=1 " . ($useOwner ? $ownerCondition : '') . $objectCondition . " ORDER BY
      */
     public function constraintSql(TableSchema $table, $name)
     {
-        $data = $table->constraint($name);
+        $data = $table->getConstraint($name);
         $out = 'CONSTRAINT ' . $this->_driver->quoteIfAutoQuote($name);
         if ($data['type'] === TableSchema::CONSTRAINT_PRIMARY) {
             $out = 'PRIMARY KEY';
@@ -847,7 +849,7 @@ WHERE 1=1 " . ($useOwner ? $ownerCondition : '') . $objectCondition . " ORDER BY
     /**
      * Generate the SQL to drop a table.
      *
-     * @param \Cake\Database\Schema\TableSchema $table TableSchema instance
+     * @param \Cake\Database\Schema\TableSchema $table Table instance
      * @return array SQL statements to drop a table.
      */
     public function dropTableSql(TableSchema $table)
@@ -882,14 +884,14 @@ WHERE 1=1 " . ($useOwner ? $ownerCondition : '') . $objectCondition . " ORDER BY
     /**
      * Returns table primary key.
      *
-     * @param TableSchema $table Table schema object.
+     * @param Table $table Table schema object.
      * @return array|null
      */
     protected function _getPrimaryKey(TableSchema $table)
     {
         $constraints = $table->constraints();
         foreach ($constraints as $name) {
-            $constraint = $table->constraint($name);
+            $constraint = $table->getConstraint($name);
             if ($this->_isSingleKey($table, [$constraint])) {
                 return $constraint;
             }

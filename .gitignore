@@ -2,3 +2,6 @@
 /.idea
 /phpunit.xml
 /pmip
+
+# NetBeans
+nbproject/*

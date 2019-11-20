@@ -93,7 +93,8 @@ class OracleStatement extends StatementDecorator
     /**
      * {@inheritDoc}
      */
-    public function fetch($type = 'num')
+    /*hugo lizama - relaced*/
+    /*public function fetch($type = 'num')
     {
         $result = $this->_statement->fetch($type);
         if (is_array($result)) {
@@ -104,7 +105,7 @@ class OracleStatement extends StatementDecorator
             }
         }
         return $result;
-    }
+    }*/
 
     /**
      * {@inheritDoc}
@@ -114,4 +115,27 @@ class OracleStatement extends StatementDecorator
         return $this->_statement->fetchAll($type);
     }
 
+	
+    /** hugo lizama - added
+    * VERY HACKY: Override fetch to UN-auto-shorten identifiers,
+    * which is done in OracleDialectTrait "quoteIdentifier"
+    *
+    * {@inheritDoc}
+    */
+    public function fetch($type = 'num') {
+      $row = parent::fetch($type);
+      if ($type == 'assoc' && is_array($row) && !empty($this->_driver->autoShortenedIdentifiers)) {
+        //Need to preserve order of row results
+        $translatedRow = [];
+        foreach ($row as $key => $val) {
+          if (array_key_exists($key, $this->_driver->autoShortenedIdentifiers)) {
+            $translatedRow[$this->_driver->autoShortenedIdentifiers[$key]] = $val;
+          } else {
+            $translatedRow[$key] = $val;
+          }
+        }
+        $row = $translatedRow;
+      }
+      return $row;
+    }
 }

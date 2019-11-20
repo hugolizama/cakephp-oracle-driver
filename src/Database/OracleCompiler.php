@@ -40,7 +40,7 @@ class OracleCompiler extends QueryCompiler
      */
     protected function _buildInsertPart($parts, $query, $generator)
     {
-        $driver = $query->connection()->driver();
+        $driver = $query->getConnection()->getDriver();
         $table = $driver->quoteIfAutoQuote($parts[0]);
         $columns = $this->_stringifyExpressions($parts[1], $generator);
         return sprintf('INSERT INTO %s (%s)', $table, implode(', ', $columns));

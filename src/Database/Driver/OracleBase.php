@@ -61,7 +61,10 @@ abstract class OracleBase extends Driver
         }
         $config = $this->_config;
 
-        $config['init'][] = "ALTER SESSION SET NLS_DATE_FORMAT='YYYY-MM-DD HH24:MI:SS' NLS_TIMESTAMP_FORMAT='YYYY-MM-DD HH24:MI:SS' NLS_TIMESTAMP_TZ_FORMAT='YYYY-MM-DD HH24:MI:SS'";
+        $config['init'][] = "ALTER SESSION SET NLS_DATE_FORMAT='YYYY-MM-DD HH24:MI:SS' 
+				NLS_TIMESTAMP_FORMAT='YYYY-MM-DD HH24:MI:SS' 
+				NLS_TIMESTAMP_TZ_FORMAT='YYYY-MM-DD HH24:MI:SS'
+				NLS_NUMERIC_CHARACTERS = '.,'";
 
         $config['flags'] += [
             // PDO::ATTR_CASE => PDO::CASE_LOWER, // @todo move to config setting
@@ -157,7 +160,7 @@ abstract class OracleBase extends Driver
         }
 
         if ($isObject && $query->isBufferedResultsEnabled() === false || $disableBuffer) {
-            $statement->enableBufferedResults(false);
+            $statement->bufferResults(false);
         }
         return $statement;
     }

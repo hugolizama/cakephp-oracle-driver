@@ -24,8 +24,11 @@ use Cake\Database\SqlDialectTrait;
  */
 trait OracleDialectTrait
 {
-
-    use SqlDialectTrait;
+    /*added hugo lizama*/
+    use SqlDialectTrait {
+      quoteIdentifier as origQuoteIdentifier;
+    }
+    public $autoShortenedIdentifiers = [];
 
     /**
      *  String used to start a database identifier quoting to make it safe
@@ -96,7 +99,7 @@ trait OracleDialectTrait
         $query->limit(null)
             ->offset(null);
 
-        $outer = new Query($query->connection());
+        $outer = new Query($query->getConnection());
         $outer
             ->select([
                 'cake_paging.*',
@@ -104,7 +107,7 @@ trait OracleDialectTrait
             ])
             ->from(['cake_paging' => $query]);
 
-        $outer2 = new Query($query->connection());
+        $outer2 = new Query($query->getConnection());
         $outer2->select('*')
             ->from(['cake_paging_out' => $outer]);
 
@@ -148,14 +151,14 @@ trait OracleDialectTrait
      */
     protected function _transformFunctionExpression(FunctionExpression $expression)
     {
-        switch ($expression->name()) {
+        switch ($expression->getName()) {
             case 'CONCAT':
-                $expression->name('')->type(' ||');
+                $expression->setName('')->setConjunction(' ||');
                 break;
             case 'DATEDIFF':
                 $expression
-                    ->name('')
-                    ->type('-')
+                    ->setName('')
+                    ->setConjunction('-')
                     ->iterateParts(function ($p) {
                         if (is_string($p)) {
                             $p = ['value' => [$p => 'literal'], 'type' => null];
@@ -168,19 +171,19 @@ trait OracleDialectTrait
                 break;
             case 'CURRENT_DATE':
                 $time = new FunctionExpression('LOCALTIMESTAMP', [' 0 ' => 'literal']);
-                $expression->name('TO_CHAR')->add([$time, 'YYYY-MM-DD']);
+                $expression->setName('TO_CHAR')->add([$time, 'YYYY-MM-DD']);
                 break;
             case 'CURRENT_TIME':
                 $time = new FunctionExpression('LOCALTIMESTAMP', [' 0 ' => 'literal']);
-                $expression->name('TO_CHAR')->add([$time, 'YYYY-MM-DD HH24:MI:SS']);
+                $expression->setName('TO_CHAR')->add([$time, 'YYYY-MM-DD HH24:MI:SS']);
                 break;
             case 'NOW':
-                $expression->name('LOCALTIMESTAMP')->add([' 0 ' => 'literal']);
+                $expression->setName('LOCALTIMESTAMP')->add([' 0 ' => 'literal']);
                 break;
             case 'DATE_ADD':
                 $expression
-                    ->name('TO_CHAR')
-                    ->type(' + INTERVAL')
+                    ->setName('TO_CHAR')
+                    ->setConjunction(' + INTERVAL')
                     ->iterateParts(function ($p, $key) {
                         if ($key === 1) {
                             $keys = explode(' ', $p);
@@ -194,7 +197,7 @@ trait OracleDialectTrait
                 break;
             case 'DAYOFWEEK':
                 $expression
-                    ->name('TO_CHAR')
+                    ->setName('TO_CHAR')
                     ->add(['d']);
                 break;
         }
@@ -289,16 +292,16 @@ trait OracleDialectTrait
     protected function _insertQueryTranslator($query)
     {
         $v = $query->clause('values');
-        if (count($v->values()) === 1 || $v->query()) {
+        if (count($v->getValues()) === 1 || $v->query()) {
             return $query;
         }
 
-        $newQuery = $query->connection()->newQuery();
+        $newQuery = $query->getConnection()->newQuery();
         $cols = $v->columns();
         $placeholder = 0;
         $replaceQuery = false;
 
-        foreach ($v->values() as $k => $val) {
+        foreach ($v->getValues() as $k => $val) {
             $fillLength = count($cols) - count($val);
             if ($fillLength > 0) {
                 $val = array_merge($val, array_fill(0, $fillLength, null));
@@ -318,7 +321,7 @@ trait OracleDialectTrait
                 continue;
             }
 
-            $q = $newQuery->connection()->newQuery();
+            $q = $newQuery->getConnection()->newQuery();
             $newQuery->unionAll($q->select($select)->from('DUAL'));
         }
 
@@ -328,5 +331,28 @@ trait OracleDialectTrait
 
         return $query;
     }
+	
+	
+    /** hugo lizama - added
+    * VERY HACKY: To avoid Oracle's "No identifiers > 30 characters"
+    * restriction, at this very low level we'll auto-replace Cake automagic
+    * aliases like 'SomeLongTableName__some_really_long_field_name' with
+    * 'XXAUTO_SHORTENED_ID[n]' where [n] is a simple incrementing integer.
+    * Then in OracleStatement's "fetch" function, we'll undo these
+    * auto-replacements
+    *
+    * {@inheritDoc}
+    */
+    public function quoteIdentifier($identifier) {
+     if (preg_match('/^[\w-]+$/', $identifier) && strlen($identifier) > 30) {
+       $key = array_search($identifier, $this->autoShortenedIdentifiers);
+       if ($key === false) {
+         $key = 'XXAUTO_SHORTENED_ID' . (count($this->autoShortenedIdentifiers) + 1);
+         $this->autoShortenedIdentifiers[$key] = $identifier;
+       }
+       $identifier = $key;
+     }
+     return $this->origQuoteIdentifier($identifier);
+   }
 
 }
