@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.1 
+## 1.0.1 - Tested in Cakephp 3.6.14
 *  #### Changes
     * **src\Database\Dialect\OracleDialectTrait.php:** quoteIdentifier function added to treat those names of tables with more than 30 characters.
     * **src\Database\Schema\OracleSchema.php:** convertForeignKeyDescription function modified to convert all column names to uppercase.
