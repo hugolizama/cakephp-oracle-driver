@@ -258,7 +258,7 @@ abstract class OracleBase extends Driver
      */
     public function quoteIfAutoQuote($identifier)
     {
-        if ($this->autoQuoting()) {
+        if ($this->isAutoQuotingEnabled()) {
             return $this->quoteIdentifier($identifier);
         }
         return $identifier;
